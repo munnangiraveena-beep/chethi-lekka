@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="te">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="description" content="తెలుగులో భూమి కొలతలు, స్థలం విస్తీర్ణం, కాలిక్యులేటర్, వడ్డీ లెక్కలు.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="మన లెక్కలు">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>మన లెక్కలు</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icons/icon-180.png">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="topbar"><h1 id="title">విస్తీర్ణం మార్పిడి</h1></header>
+
+<main id="main">
+
+  <!-- విస్తీర్ణం (area) -->
+  <section class="screen active" id="area" data-title="విస్తీర్ణం మార్పిడి">
+    <p class="hint">ఏ పెట్టెలోనైనా సంఖ్య వేయండి. మిగతావి వెంటనే మారుతాయి.</p>
+    <div class="unit-list"></div>
+    <button class="btn-ghost clear" type="button">తుడిచేయి</button>
+    <div class="facts">
+      <div>1 గజం = 9 చదరపు అడుగులు</div>
+      <div>1 సెంటు = 48.4 గజాలు = 435.6 చ. అడుగులు</div>
+      <div>1 ఎకరం = 100 సెంట్లు = 4,840 గజాలు</div>
+    </div>
+  </section>
+
+  <!-- పొడవు (length) -->
+  <section class="screen" id="length" data-title="పొడవు మార్పిడి">
+    <p class="hint">ఏ పెట్టెలోనైనా సంఖ్య వేయండి. మిగతావి వెంటనే మారుతాయి.</p>
+    <div class="unit-list"></div>
+    <button class="btn-ghost clear" type="button">తుడిచేయి</button>
+    <div class="facts">
+      <div>1 లింకు = 0.66 అడుగులు (7.92 అంగుళాలు)</div>
+      <div>100 లింకులు = 1 గొలుసు = 66 అడుగులు</div>
+      <div>1 మీటరు = 3.28 అడుగులు = 100 సెంటీమీటర్లు</div>
+    </div>
+  </section>
+
+  <!-- స్థలం (plot area) -->
+  <section class="screen" id="plot" data-title="స్థలం విస్తీర్ణం">
+    <div class="shape-picker" id="shape-picker">
+      <button type="button" class="shape on" data-v="rect">
+        <svg viewBox="0 0 48 36"><rect x="5" y="5" width="38" height="26" rx="1"/></svg>
+        <span>దీర్ఘచతురస్రం</span>
+      </button>
+      <button type="button" class="shape" data-v="quad">
+        <svg viewBox="0 0 48 36"><path d="M5 9 L36 4 L44 31 L9 29 Z"/><path class="d" d="M5 9 L44 31"/></svg>
+        <span>4 వైపులు</span>
+      </button>
+      <button type="button" class="shape" data-v="tri">
+        <svg viewBox="0 0 48 36"><path d="M5 31 L43 31 L28 5 Z"/></svg>
+        <span>త్రిభుజం</span>
+      </button>
+    </div>
+    <p class="hint" id="shape-hint"></p>
+
+    <div class="photo">
+      <input type="file" accept="image/*" id="photo-input" hidden>
+      <button type="button" class="btn-outline" id="photo-btn">📷 స్థలం ఫోటో పెట్టండి <small>(అవసరమైతే)</small></button>
+      <div class="photo-preview" id="photo-preview" hidden>
+        <img id="photo-img" alt="స్థలం ఫోటో">
+        <button type="button" class="photo-remove" id="photo-remove">✕ తీసేయి</button>
+      </div>
+    </div>
+
+    <div class="card diagram">
+      <svg id="plot-svg" viewBox="0 0 320 220" role="img" aria-label="స్థలం బొమ్మ"></svg>
+    </div>
+
+    <div class="field-label">కొలతలు దేనిలో?</div>
+    <div class="seg" id="plot-unit">
+      <button type="button" data-v="ft" class="on">అడుగులు</button>
+      <button type="button" data-v="m">మీటర్లు</button>
+      <button type="button" data-v="link">లింకులు</button>
+    </div>
+
+    <div class="fields" id="plot-fields"></div>
+    <p class="error" id="plot-error" hidden>ఈ కొలతలతో ఆకారం ఏర్పడదు. కొలతలు మళ్లీ సరిచూడండి.</p>
+
+    <div class="result">
+      <div class="result-title">స్థలం విస్తీర్ణం</div>
+      <div id="plot-rows"></div>
+    </div>
+    <button class="btn-ghost" type="button" id="plot-clear">తుడిచేయి</button>
+  </section>
+
+  <!-- కాలిక్యులేటర్ -->
+  <section class="screen" id="calc" data-title="కాలిక్యులేటర్">
+    <div class="calc-display">
+      <div class="calc-expr" id="calc-expr">0</div>
+      <div class="calc-preview" id="calc-preview"></div>
+    </div>
+    <div class="keypad" id="keypad">
+      <button type="button" class="key fn" data-k="C">C</button>
+      <button type="button" class="key fn" data-k="⌫" aria-label="వెనక్కి">
+        <svg viewBox="0 0 24 24"><path d="M9 5h11a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 20 19H9l-6.5-7z"/><path d="M12.5 9.5l5 5m0-5l-5 5"/></svg>
+      </button>
+      <button type="button" class="key op" data-k="%">%</button>
+      <button type="button" class="key op" data-k="÷">÷</button>
+      <button type="button" class="key" data-k="7">7</button>
+      <button type="button" class="key" data-k="8">8</button>
+      <button type="button" class="key" data-k="9">9</button>
+      <button type="button" class="key op" data-k="×">×</button>
+      <button type="button" class="key" data-k="4">4</button>
+      <button type="button" class="key" data-k="5">5</button>
+      <button type="button" class="key" data-k="6">6</button>
+      <button type="button" class="key op" data-k="−">−</button>
+      <button type="button" class="key" data-k="1">1</button>
+      <button type="button" class="key" data-k="2">2</button>
+      <button type="button" class="key" data-k="3">3</button>
+      <button type="button" class="key op" data-k="+">+</button>
+      <button type="button" class="key" data-k="00">00</button>
+      <button type="button" class="key" data-k="0">0</button>
+      <button type="button" class="key" data-k=".">.</button>
+      <button type="button" class="key eq" data-k="=">=</button>
+    </div>
+  </section>
+
+  <!-- వడ్డీ (interest) -->
+  <section class="screen" id="interest" data-title="వడ్డీ లెక్క">
+    <div class="card">
+      <label class="field-label" for="int-p">అసలు (ఇచ్చిన / తీసుకున్న డబ్బు)</label>
+      <div class="affix"><span class="pre">₹</span><input id="int-p" class="num"></div>
+    </div>
+
+    <div class="card">
+      <div class="field-label">వడ్డీ రేటు</div>
+      <div class="seg" id="int-mode">
+        <button type="button" data-v="rupee" class="on">రూపాయి వడ్డీ</button>
+        <button type="button" data-v="percent">శాతం (%)</button>
+      </div>
+      <div class="affix"><input id="int-r" class="num"><span class="post" id="int-r-suffix">₹100 కి, నెలకు</span></div>
+      <p class="hint small" id="int-r-hint"></p>
+    </div>
+
+    <div class="card">
+      <div class="field-label">ఎంత కాలం?</div>
+      <div class="seg" id="int-time">
+        <button type="button" data-v="dur" class="on">కాలం వేయండి</button>
+        <button type="button" data-v="dates">తేదీల మధ్య</button>
+      </div>
+      <div class="dur3" id="int-dur">
+        <label><input id="int-y" class="num"><span>సంవత్సరాలు</span></label>
+        <label><input id="int-m" class="num"><span>నెలలు</span></label>
+        <label><input id="int-d" class="num"><span>రోజులు</span></label>
+      </div>
+      <div id="int-dates" hidden>
+        <label class="date-row"><span>ఇచ్చిన తేదీ</span><input type="date" id="int-from"></label>
+        <label class="date-row"><span>లెక్క తేదీ</span><input type="date" id="int-to"></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="field-label">వడ్డీ రకం</div>
+      <div class="seg" id="int-type">
+        <button type="button" data-v="simple" class="on">సాధారణ వడ్డీ</button>
+        <button type="button" data-v="compound">చక్రవడ్డీ</button>
+      </div>
+      <div id="int-freq-wrap" hidden>
+        <div class="field-label sub">వడ్డీ అసలులో ఎప్పుడు కలుస్తుంది?</div>
+        <div class="seg" id="int-freq">
+          <button type="button" data-v="1" class="on">ఏడాదికి</button>
+          <button type="button" data-v="2">6 నెలలకు</button>
+          <button type="button" data-v="12">ప్రతి నెల</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="result">
+      <div class="result-title">వడ్డీ</div>
+      <div class="big" id="int-interest">—</div>
+      <div class="result-row"><span>మొత్తం (అసలు + వడ్డీ)</span><b id="int-total">—</b></div>
+      <div class="result-row" id="int-monthly-row"><span>నెలకు వడ్డీ</span><b id="int-monthly">—</b></div>
+      <div class="result-row"><span>కాలం</span><b id="int-period">—</b></div>
+    </div>
+    <button class="btn-ghost" type="button" id="int-clear">తుడిచేయి</button>
+  </section>
+</main>
+
+<nav class="tabbar" id="tabbar">
+  <button type="button" class="tab on" data-to="area">
+    <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 12h17M12 3.5v17"/></svg>
+    <span>విస్తీర్ణం</span>
+  </button>
+  <button type="button" class="tab" data-to="length">
+    <svg viewBox="0 0 24 24"><rect x="2.5" y="8" width="19" height="8" rx="1.5"/><path d="M6 8v3M9.5 8v4.5M13 8v3M16.5 8v4.5"/></svg>
+    <span>పొడవు</span>
+  </button>
+  <button type="button" class="tab" data-to="plot">
+    <svg viewBox="0 0 24 24"><path d="M4 6l11-2.5 5.5 14.5L5 20z"/><path d="M4 6l16.5 12" stroke-dasharray="2 2.2"/></svg>
+    <span>స్థలం</span>
+  </button>
+  <button type="button" class="tab" data-to="calc">
+    <svg viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx=".5"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 17h.01M12 17h.01M15.5 17h.01" stroke-width="2.4"/></svg>
+    <span>లెక్కలు</span>
+  </button>
+  <button type="button" class="tab" data-to="interest">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 7.5h7M8.5 10.5h7M10.5 7.5c3.3 0 3.3 6 0 6H8.5l5.5 4"/></svg>
+    <span>వడ్డీ</span>
+  </button>
+</nav>
+
+<div class="viewer" id="viewer" hidden><img id="viewer-img" alt="స్థలం ఫోటో"><button type="button" aria-label="మూసేయి">✕</button></div>
+
+<script src="/app.js" defer></script>
+</body>
+</html>
