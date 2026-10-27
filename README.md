@@ -1,4 +1,4 @@
-# మన లెక్కలు
+# చేతి లెక్క
 
 A tiny Telugu web app for everyday land and money calculations, made for elders. It has big text and big buttons, works offline, and can be added to the home screen.
 

@@ -1,5 +1,5 @@
 // Bump the version whenever files change so phones pick up the update.
-const CACHE = 'mana-lekkalu-v1';
+const CACHE = 'chethi-lekka-v1';
 const ASSETS = [
   '/',
   '/index.html',
