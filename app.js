@@ -4,13 +4,13 @@
 
 // base: square feet
 const AREA_UNITS = [
-  { id: 'gajam', te: 'గజాలు', en: 'Gajam · sq. yard', f: 9 },
-  { id: 'ankanam', te: 'అంకణాలు', en: 'Ankanam · 72 sq. ft', f: 72 },
   { id: 'cents', te: 'సెంట్లు', en: 'Cents', f: 435.6 },
-  { id: 'gunta', te: 'గుంటలు', en: 'Gunta · 1,089 sq. ft', f: 1089 },
-  { id: 'acre', te: 'ఎకరాలు', en: 'Acres', f: 43560 },
+  { id: 'gajam', te: 'గజాలు', en: 'Gajam · sq. yard', f: 9 },
   { id: 'sqft', te: 'చదరపు అడుగులు', en: 'Sq. feet', f: 1 },
   { id: 'sqm', te: 'చదరపు మీటర్లు', en: 'Sq. metres', f: 10.7639104 },
+  { id: 'acre', te: 'ఎకరాలు', en: 'Acres', f: 43560 },
+  { id: 'ankanam', te: 'అంకణాలు', en: 'Ankanam · 72 sq. ft', f: 72 },
+  { id: 'gunta', te: 'గుంటలు', en: 'Gunta · 1,089 sq. ft', f: 1089 },
 ];
 
 // base: metres; the feet + inches pair counts in inches
@@ -310,17 +310,29 @@ function toast(msg, undo) {
 const CLEARED = 'అన్నీ తుడిచేశాం';
 
 function initTextSize() {
-  const SIZES = [[1, 'సాధారణ అక్షరాలు'], [1.15, 'పెద్ద అక్షరాలు'], [1.3, 'ఇంకా పెద్ద అక్షరాలు']];
-  let i = Number(store.get('size')) || 0;
-  if (!SIZES[i]) i = 0;
-  const apply = () => document.documentElement.style.setProperty('--zoom', SIZES[i][0]);
-  apply();
-  $('#size-btn').addEventListener('click', () => {
-    i = (i + 1) % SIZES.length;
+  const STEPS = [0.9, 1, 1.15, 1.3, 1.45];
+  const zin = $('#zoom-in'), zout = $('#zoom-out');
+  let i = STEPS.indexOf(Number(store.get('zoom')));
+  if (i < 0) i = 1;
+  const apply = () => {
+    document.documentElement.style.setProperty('--zoom', STEPS[i]);
+    // at big sizes the boxes move under their labels so nothing runs off the screen
+    document.documentElement.classList.toggle('big', STEPS[i] >= 1.3);
+    zout.classList.toggle('dim', i === 0);
+    zin.classList.toggle('dim', i === STEPS.length - 1);
+  };
+  // the buttons stay tappable at the ends and say why nothing changed
+  const step = d => {
+    const next = i + d;
+    if (!STEPS[next]) { toast(d > 0 ? 'ఇంతకంటే పెద్దవి కావు' : 'ఇంతకంటే చిన్నవి కావు'); return; }
+    i = next;
     apply();
-    store.set('size', i);
-    toast(SIZES[i][1]);
-  });
+    store.set('zoom', STEPS[i]);
+    toast(`అక్షరాల సైజు ${Math.round(STEPS[i] * 100)}%`);
+  };
+  zin.addEventListener('click', () => step(1));
+  zout.addEventListener('click', () => step(-1));
+  apply();
 }
 
 // ---------- tabs ----------
