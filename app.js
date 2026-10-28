@@ -26,7 +26,7 @@ const LENGTH_UNITS = [
 // base: grams
 const WEIGHT_UNITS = [
   { id: 'g', te: 'గ్రాములు', en: 'Grams', f: 1 },
-  { id: 'kasu', te: 'కాసు / సవర', en: 'Kasu · Sovereign · 8 g', f: 8 },
+  { id: 'savara', te: 'సవర', en: 'Sovereign · 8 g', f: 8 },
   { id: 'tulam', te: 'తులం', en: 'Tola · 10 g (shops today)', f: 10 },
   { id: 'oldtulam', te: 'పాత తులం', en: 'Old tola · 11.664 g', f: 11.664 },
   { id: 'kg', te: 'కిలోగ్రాములు', en: 'Kilograms', f: 1000 },
