@@ -282,13 +282,63 @@ function setSeg(el, v) {
   $$('button', el).forEach(x => x.classList.toggle('on', x.dataset.v === v));
 }
 
+// a short glow so the eye notices a number that just changed
+function flash(el) {
+  el.classList.remove('flash');
+  void el.offsetWidth;
+  el.classList.add('flash');
+}
+
+function setText(el, text) {
+  if (el.textContent === text) return;
+  el.textContent = text;
+  if (text !== '—') flash(el);
+}
+
+// message bar above the tabs; with `undo` it offers to bring things back
+let toastTimer;
+function toast(msg, undo) {
+  const el = $('#toast'), btn = $('#toast-undo');
+  $('#toast-msg').textContent = msg;
+  btn.hidden = !undo;
+  btn.onclick = () => { undo(); el.classList.remove('show'); };
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), undo ? 6000 : 1800);
+}
+
+const CLEARED = 'అన్నీ తుడిచేశాం';
+
+function initTextSize() {
+  const SIZES = [[1, 'సాధారణ అక్షరాలు'], [1.15, 'పెద్ద అక్షరాలు'], [1.3, 'ఇంకా పెద్ద అక్షరాలు']];
+  let i = Number(store.get('size')) || 0;
+  if (!SIZES[i]) i = 0;
+  const apply = () => document.documentElement.style.setProperty('--zoom', SIZES[i][0]);
+  apply();
+  $('#size-btn').addEventListener('click', () => {
+    i = (i + 1) % SIZES.length;
+    apply();
+    store.set('size', i);
+    toast(SIZES[i][1]);
+  });
+}
+
 // ---------- tabs ----------
 
 function initTabs() {
   const main = $('#main'), title = $('#title');
+  const order = [...$$('.tab').map(t => t.dataset.to), 'about'];
+  let current = null;
   const show = id => {
     const screen = document.getElementById(id);
-    if (!screen) return;
+    if (!screen || id === current) return;
+    // slide in from the side of the tab that was tapped
+    if (current) {
+      screen.classList.remove('in-l', 'in-r');
+      void screen.offsetWidth;
+      screen.classList.add(order.indexOf(id) > order.indexOf(current) ? 'in-r' : 'in-l');
+    }
+    current = id;
     $$('.screen').forEach(s => s.classList.toggle('active', s === screen));
     $$('.tab').forEach(t => t.classList.toggle('on', t.dataset.to === id));
     title.textContent = screen.dataset.title;
@@ -307,6 +357,11 @@ function initTabs() {
 
 function initConverter(root, units) {
   const list = $('.unit-list', root);
+  const show = (inp, v) => {
+    if (inp.value === v) return;
+    inp.value = v;
+    if (v) flash(inp);
+  };
   // each row knows how to read its value into the base unit and show a base value
   const rows = units.map(u => {
     const row = document.createElement('label');
@@ -319,17 +374,16 @@ function initConverter(root, units) {
       inputs = [p.ft, p.inch];
       get = () => ftInToInches(parseNum(p.ft.value), parseNum(p.inch.value)) * u.f;
       set = base => {
-        if (isNaN(base)) { p.ft.value = p.inch.value = ''; return; }
-        const [ft, inch] = inchesToFtIn(base / u.f);
-        p.ft.value = ft.toLocaleString('en-IN');
-        p.inch.value = String(inch);
+        const [ft, inch] = isNaN(base) ? ['', ''] : inchesToFtIn(base / u.f);
+        show(p.ft, ft === '' ? '' : ft.toLocaleString('en-IN'));
+        show(p.inch, String(inch));
       };
     } else {
       const inp = numInput();
       row.append(inp);
       inputs = [inp];
       get = () => parseNum(inp.value) * u.f;
-      set = base => { inp.value = isNaN(base) ? '' : fmt(base / u.f); };
+      set = base => show(inp, isNaN(base) ? '' : fmt(base / u.f));
     }
     inputs.forEach(inp => inp.addEventListener('focus', () => setTimeout(() => inp.select(), 0)));
     list.append(row);
@@ -348,7 +402,13 @@ function initConverter(root, units) {
   });
 
   $('.clear', root).addEventListener('click', () => {
+    const saved = rows.map(r => ({ vals: r.inputs.map(i => i.value), src: r.row.classList.contains('src') }));
+    if (!saved.some(s => s.vals.some(Boolean))) return;
     rows.forEach(r => { r.set(NaN); r.row.classList.remove('src'); });
+    toast(CLEARED, () => rows.forEach((r, i) => {
+      r.inputs.forEach((inp, k) => { inp.value = saved[i].vals[k]; });
+      r.row.classList.toggle('src', saved[i].src);
+    }));
   });
 }
 
@@ -454,7 +514,8 @@ function initPlot() {
     errEl.hidden = !complete || ok;
     draw(shape, v, ok);
     const sqft = area * LEN_TO_FT[unit] ** 2;
-    AREA_UNITS.forEach((u, i) => { resultCells[i].textContent = ok ? fmt(sqft / u.f) : '—'; });
+    $('#plot-result').classList.toggle('empty', !ok);
+    AREA_UNITS.forEach((u, i) => setText(resultCells[i], ok ? fmt(sqft / u.f) : '—'));
   }
 
   function renderFields() {
@@ -492,7 +553,16 @@ function initPlot() {
 
   segmented($('#shape-picker'), v => { state.shape = v; renderFields(); });
   segmented($('#plot-unit'), v => { state.unit = v; renderFields(); });
-  $('#plot-clear').addEventListener('click', () => { state.vals[state.shape] = {}; renderFields(); });
+  $('#plot-clear').addEventListener('click', () => {
+    const { shape } = state, saved = state.vals[shape];
+    if (!Object.values(saved).some(v => v.main || v.inch)) return;
+    state.vals[shape] = {};
+    renderFields();
+    toast(CLEARED, () => {
+      state.vals[shape] = saved;
+      if (state.shape === shape) renderFields();
+    });
+  });
 
   svg.addEventListener('click', e => {
     const t = e.target.closest('[data-k]');
@@ -563,6 +633,7 @@ function initCalc() {
       expr = numToExpr(r);
       done = true;
       render();
+      flash(exprEl);
       return;
     } else if (/^\d+$/.test(k)) {
       if (done) e = '';
@@ -641,10 +712,11 @@ function initInterest() {
       const n = Math.round((parseNum(Y.value) || 0) * 12 + (parseNum(M.value) || 0));
       const ok = p > 0 && r >= 0 && n > 0;
       const emi = ok ? emiFor(p, annual, n) : NaN;
-      $('#emi-amount').textContent = ok ? fmtRs(emi) : '—';
-      $('#emi-interest').textContent = ok ? fmtRs(emi * n - p) : '—';
-      $('#emi-total').textContent = ok ? fmtRs(emi * n) : '—';
-      $('#emi-count').textContent = n > 0 ? `${n} నెలలు` : '—';
+      $('#emi-result').classList.toggle('empty', !ok);
+      setText($('#emi-amount'), ok ? fmtRs(emi) : '—');
+      setText($('#emi-interest'), ok ? fmtRs(emi * n - p) : '—');
+      setText($('#emi-total'), ok ? fmtRs(emi * n) : '—');
+      setText($('#emi-count'), n > 0 ? `${n} నెలలు` : '—');
       return;
     }
 
@@ -656,17 +728,23 @@ function initInterest() {
       ymd = a && b ? diffYMD(a, b) : null;
     }
     const months = ymd ? ymd.y * 12 + ymd.m + ymd.d / 30 : 0;
-    out.period.textContent = ymd && months > 0 ? periodText(ymd) : (s.time === 'dates' && from.value && to.value ? 'తేదీలు సరిచూడండి' : '—');
+    setText(out.period, ymd && months > 0 ? periodText(ymd) : '—');
+    const badDates = s.time === 'dates' && from.value && to.value && !ymd;
+    $('#int-result .result-empty').textContent = badDates
+      ? 'తేదీలు సరిచూడండి — లెక్క తేదీ, ఇచ్చిన తేదీ తర్వాత ఉండాలి.'
+      : 'అసలు, రేటు, కాలం వేస్తే వడ్డీ ఇక్కడ వస్తుంది.';
 
     $('#int-monthly-row').hidden = s.compound;
-    if (!(p > 0) || !(r > 0) || !(months > 0)) {
-      out.interest.textContent = out.total.textContent = out.monthly.textContent = '—';
+    const ok = p > 0 && r > 0 && months > 0;
+    $('#int-result').classList.toggle('empty', !ok);
+    if (!ok) {
+      for (const k of ['interest', 'total', 'monthly']) setText(out[k], '—');
       return;
     }
     const interest = interestFor(p, annual, months, s.compound, s.perYear);
-    out.interest.textContent = fmtRs(interest);
-    out.total.textContent = fmtRs(p + interest);
-    out.monthly.textContent = fmtRs(p * annual / 1200);
+    setText(out.interest, fmtRs(interest));
+    setText(out.total, fmtRs(p + interest));
+    setText(out.monthly, fmtRs(p * annual / 1200));
   }
 
   for (const el of [P, R, Y, M, D]) el.addEventListener('input', () => { cleanNumInput(el); compute(); });
@@ -704,10 +782,16 @@ function initInterest() {
   segmented($('#int-freq'), v => { s.perYear = Number(v); compute(); });
 
   $('#int-clear').addEventListener('click', () => {
-    for (const el of [P, R, Y, M, D]) el.value = '';
-    from.value = '';
+    const fields = [P, R, Y, M, D, from];
+    const saved = [...fields, to].map(el => el.value);
+    if (!fields.some(el => el.value)) return;
+    for (const el of fields) el.value = '';
     to.value = todayISO();
     compute();
+    toast(CLEARED, () => {
+      [...fields, to].forEach((el, i) => { el.value = saved[i]; });
+      compute();
+    });
   });
 
   compute();
@@ -716,6 +800,7 @@ function initInterest() {
 // ---------- start ----------
 
 function init() {
+  initTextSize();
   initTabs();
   initConverter($('#area'), AREA_UNITS);
   initConverter($('#length'), LENGTH_UNITS);

@@ -19,6 +19,7 @@
 <header class="topbar">
   <div class="topbar-in">
     <h1 id="title">విస్తీర్ణం మార్పిడి</h1>
+    <button type="button" class="about-btn size-btn" id="size-btn" aria-label="అక్షరాల సైజు">అ<sup>+</sup></button>
     <button type="button" class="about-btn" id="about-btn" aria-label="మా గురించి">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5h.01"/></svg>
     </button>
@@ -109,8 +110,9 @@
     <div class="fields" id="plot-fields"></div>
     <p class="error" id="plot-error" hidden>ఈ కొలతలతో ఆకారం ఏర్పడదు. కొలతలు మళ్లీ సరిచూడండి.</p>
 
-    <div class="result">
+    <div class="result empty" id="plot-result">
       <div class="result-title">స్థలం విస్తీర్ణం</div>
+      <p class="result-empty">పై పెట్టెల్లో కొలతలు అన్నీ వేస్తే, విస్తీర్ణం ఇక్కడ వస్తుంది.</p>
       <div id="plot-rows"></div>
     </div>
     <button class="btn-ghost" type="button" id="plot-clear">తుడిచేయి</button>
@@ -203,15 +205,17 @@
       </div>
     </div>
 
-    <div class="result" id="int-result">
+    <div class="result empty" id="int-result">
       <div class="result-title">వడ్డీ</div>
+      <p class="result-empty">అసలు, రేటు, కాలం వేస్తే వడ్డీ ఇక్కడ వస్తుంది.</p>
       <div class="big" id="int-interest">—</div>
       <div class="result-row"><span>మొత్తం (అసలు + వడ్డీ)</span><b id="int-total">—</b></div>
       <div class="result-row" id="int-monthly-row"><span>నెలకు వడ్డీ</span><b id="int-monthly">—</b></div>
       <div class="result-row"><span>కాలం</span><b id="int-period">—</b></div>
     </div>
-    <div class="result" id="emi-result" hidden>
+    <div class="result empty" id="emi-result" hidden>
       <div class="result-title">నెలకు కట్టాల్సిన EMI</div>
+      <p class="result-empty">అప్పు, రేటు, కాలం వేస్తే EMI ఇక్కడ వస్తుంది.</p>
       <div class="big" id="emi-amount">—</div>
       <div class="result-row"><span>మొత్తం వడ్డీ</span><b id="emi-interest">—</b></div>
       <div class="result-row"><span>మొత్తం కట్టేది (అసలు + వడ్డీ)</span><b id="emi-total">—</b></div>
@@ -263,6 +267,8 @@
     <span>వడ్డీ</span>
   </button>
 </nav>
+
+<div class="toast" id="toast" role="status"><span id="toast-msg"></span><button type="button" id="toast-undo">↶ వెనక్కి తెచ్చు</button></div>
 
 <div class="viewer" id="viewer" hidden><img id="viewer-img" alt="స్థలం ఫోటో"><button type="button" aria-label="మూసేయి">✕</button></div>
 
