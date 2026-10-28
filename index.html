@@ -11,14 +11,18 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>చేతి లెక్క</title>
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="/icons/favicon-48.png" sizes="48x48" type="image/png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 <header class="topbar">
   <div class="topbar-in">
-    <h1 id="title">విస్తీర్ణం మార్పిడి</h1>
+    <div class="titles">
+      <span class="brand">చేతి లెక్క</span>
+      <h1 id="title">విస్తీర్ణం మార్పిడి</h1>
+    </div>
     <button type="button" class="about-btn" id="zoom-out" aria-label="అక్షరాలు చిన్నవి">
       <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5l5 5M7.5 10.5h6"/></svg>
     </button>
@@ -142,7 +146,7 @@
     </div>
 
     <div class="card diagram">
-      <svg id="plot-svg" viewBox="0 0 360 250" role="img" aria-label="స్థలం బొమ్మ"></svg>
+      <svg id="plot-svg" viewBox="0 0 360 260" role="img" aria-label="స్థలం బొమ్మ"></svg>
       <p class="area-line" id="plot-area-line"></p>
       <p class="diagram-tip">బొమ్మలో ఏ వైపు నొక్కినా, ఆ కొలత పెట్టె వెలుగుతుంది.</p>
     </div>
@@ -279,7 +283,7 @@
   <!-- మా గురించి (about / contact) -->
   <section class="screen" id="about" data-title="మా గురించి">
     <div class="card about">
-      <img src="/icons/icon.svg" width="72" height="72" alt="">
+      <img src="/icons/icon-192.png" width="72" height="72" alt="">
       <h2>చేతి లెక్క</h2>
       <p>భూమి కొలతలు, స్థలం విస్తీర్ణం, వడ్డీ, EMI లెక్కలు — అన్నీ తెలుగులో, ఒకే చోట. ఇంటర్నెట్ లేకపోయినా పనిచేస్తుంది.</p>
     </div>

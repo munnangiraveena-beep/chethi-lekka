@@ -111,7 +111,11 @@ function apex(base, fromStart, fromEnd, up) {
 function plotGeometry(shape, v) {
   // edges: [from corner, to corner, badge label, field key]
   if (shape === 'rect') {
-    return { pts: [[0, 0], [v.l, 0], [v.l, v.w], [0, v.w]], edges: [[0, 1, '1', 'l'], [1, 2, '2', 'w']] };
+    return {
+      pts: [[0, 0], [v.l, 0], [v.l, v.w], [0, v.w]],
+      edges: [[0, 1, '1', 'l'], [1, 2, '2', 'w']],
+      echo: [[2, 3, '1', 'l'], [3, 0, '2', 'w']],
+    };
   }
   if (shape === 'tri') {
     return {
@@ -568,7 +572,7 @@ function initPlot() {
     if (g.pts.some(p => p.some(c => !Number.isFinite(c)))) g = plotGeometry(shape, SHAPES[shape].sample);
 
     // extra room at the sides for the measurement labels
-    const W = 360, H = 250, padX = 74, padY = 46;
+    const W = 360, H = 260, padX = 74, padY = 54;
     const xs = g.pts.map(p => p[0]), ys = g.pts.map(p => p[1]);
     const minX = Math.min(...xs), minY = Math.min(...ys);
     const w = Math.max(...xs) - minX || 1, h = Math.max(...ys) - minY || 1;
@@ -584,19 +588,33 @@ function initPlot() {
     const badge = (x, y, label, k, cls = '') =>
       `<g class="bdg ${cls}" data-k="${k}"><circle class="hit-c" cx="${x}" cy="${y}" r="22"/>` +
       `<circle cx="${x}" cy="${y}" r="13"/><text x="${x}" y="${y}">${label}</text></g>`;
-    const value = (x, y, k, anchor = 'middle') =>
-      labels[k] ? `<text class="len" data-k="${k}" x="${x}" y="${y}" text-anchor="${anchor}">${labels[k]}</text>` : '';
-
-    const all = g.diag ? [...g.edges, g.diag] : g.edges;
-    let out = `<polygon class="poly" points="${P.map(p => p.join(',')).join(' ')}"/>`;
-    if (g.diag) out += line('diag', g.diag);
-    out += g.edges.map(e => line('edge', e)).join('');
-    out += P.map(([x, y]) => `<circle class="vtx" cx="${x}" cy="${y}" r="4.5"/>`).join('');
-    out += all.map(e => line('hit', e)).join('');
-    for (const [i, j, label, k] of g.edges) {
+    // a typed measurement, or the side's name in grey until one is typed
+    const value = (x, y, k, anchor = 'middle') => {
+      const l = labels[k];
+      return `<text class="len${l.typed ? '' : ' name'}" data-k="${k}" x="${x}" y="${y}" text-anchor="${anchor}">${l.text}</text>`;
+    };
+    const outward = ([i, j]) => {
       const mx = (P[i][0] + P[j][0]) / 2, my = (P[i][1] + P[j][1]) / 2;
       const dx = mx - cx, dy = my - cy, len = Math.hypot(dx, dy) || 1;
-      const ux = dx / len, uy = dy / len;
+      return [mx, my, dx / len, dy / len];
+    };
+
+    const echo = g.echo || [];
+    const all = [...g.edges, ...echo, ...(g.diag ? [g.diag] : [])];
+    let out = `<polygon class="poly" points="${P.map(p => p.join(',')).join(' ')}"/>`;
+    if (g.diag) out += line('diag', g.diag);
+    out += [...g.edges, ...echo].map(e => line('edge', e)).join('');
+    out += P.map(([x, y]) => `<circle class="vtx" cx="${x}" cy="${y}" r="4.5"/>`).join('');
+    out += all.map(e => line('hit', e)).join('');
+    for (const e of echo) {
+      const [mx, my, ux, uy] = outward(e);
+      out += Math.abs(ux) > Math.abs(uy)
+        ? value(mx + ux * 10, my + 5, e[3], ux > 0 ? 'start' : 'end')
+        : value(mx, my + uy * 18 + 5, e[3]);
+    }
+    for (const e of g.edges) {
+      const [mx, my, ux, uy] = outward(e);
+      const [, , label, k] = e;
       out += badge(mx + ux * 17, my + uy * 17, label, k);
       // under the badge for left/right sides, beyond it for top/bottom sides
       out += Math.abs(ux) > Math.abs(uy)
@@ -657,7 +675,10 @@ function initPlot() {
     const ok = complete && area > 0;
     errEl.hidden = !complete || ok;
     const sqft = area * LEN_TO_FT[unit] ** 2;
-    const labels = Object.fromEntries(SHAPES[shape].fields.map(([k]) => [k, sideLabel(k)]));
+    const labels = Object.fromEntries(SHAPES[shape].fields.map(([k, name]) => {
+      const typed = sideLabel(k);
+      return [k, { text: typed || name, typed: !!typed }];
+    }));
     draw(shape, v, ok, labels, ok && [`${fmt(sqft / 435.6)} సెంట్లు`, `${fmt(sqft / 9)} గజాలు`]);
     plotPic(ok ? sqft : NaN);
     $('#plot-result').classList.toggle('empty', !ok);

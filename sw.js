@@ -1,12 +1,13 @@
 // Bump the version whenever files change so phones pick up the update.
-const CACHE = 'chethi-lekka-v9';
+const CACHE = 'chethi-lekka-v11';
 const ASSETS = [
   '/',
   '/index.html',
   '/styles.css',
   '/app.js',
   '/manifest.webmanifest',
-  '/icons/icon.svg',
+  '/icons/favicon-32.png',
+  '/icons/favicon-48.png',
   '/icons/icon-180.png',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
