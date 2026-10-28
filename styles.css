@@ -36,19 +36,30 @@ input { font: inherit; }
 
 /* ---------- frame ---------- */
 .topbar {
-  padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
+  flex: none;
+  padding: env(safe-area-inset-top) 8px 0 16px;
   background: var(--brand);
   color: #fff;
 }
-.topbar-in { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 560px; margin: 0 auto; }
-.topbar h1 { margin: 0; font-size: 22px; font-weight: 700; }
+/* fixed height so the bar never jumps between tabs, whatever the title's letters */
+.topbar-in { display: flex; align-items: center; gap: 8px; height: 56px; max-width: 560px; margin: 0 auto; }
+.topbar h1 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .about-btn {
   display: grid;
   place-items: center;
   flex: none;
   width: 44px;
   height: 44px;
-  margin: -8px -8px -8px 0;
   border: 0;
   border-radius: 50%;
   background: none;
@@ -65,7 +76,8 @@ main { flex: 1; overflow-y: auto; overscroll-behavior-y: contain; }
 
 .tabbar {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  flex: none;
+  grid-template-columns: repeat(6, 1fr);
   gap: 2px;
   padding: 6px 4px calc(env(safe-area-inset-bottom) + 6px);
   background: var(--card);
@@ -76,13 +88,15 @@ main { flex: 1; overflow-y: auto; overscroll-behavior-y: contain; }
   flex-direction: column;
   align-items: center;
   gap: 2px;
+  min-width: 0;
   min-height: 58px;
-  padding: 6px 2px;
+  padding: 6px 0;
   border: 0;
   border-radius: 12px;
   background: none;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
+  white-space: nowrap;
   line-height: 1.3;
 }
 .tab svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }

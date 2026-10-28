@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="చేతి లెక్క">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>చేతి లెక్క</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
@@ -51,6 +51,19 @@
       <div>1 లింకు = 0.66 అడుగులు (7.92 అంగుళాలు)</div>
       <div>100 లింకులు = 1 గొలుసు = 66 అడుగులు</div>
       <div>1 మీటరు = 3.28 అడుగులు = 100 సెంటీమీటర్లు</div>
+    </div>
+  </section>
+
+  <!-- బరువు (weight) -->
+  <section class="screen" id="weight" data-title="బరువు మార్పిడి">
+    <p class="hint">ఏ పెట్టెలోనైనా సంఖ్య వేయండి. మిగతావి వెంటనే మారుతాయి.</p>
+    <div class="unit-list"></div>
+    <button class="btn-ghost clear" type="button">తుడిచేయి</button>
+    <div class="facts">
+      <div>1 కాసు = 1 సవర = 8 గ్రాములు</div>
+      <div>1 తులం = 10 గ్రాములు (ఇప్పుడు షాపుల్లో)</div>
+      <div>పాత తులం = 11.664 గ్రాములు</div>
+      <div>1 కిలో = 1,000 గ్రాములు = 125 సవరలు</div>
     </div>
   </section>
 
@@ -232,6 +245,10 @@
   <button type="button" class="tab" data-to="length">
     <svg viewBox="0 0 24 24"><rect x="2.5" y="8" width="19" height="8" rx="1.5"/><path d="M6 8v3M9.5 8v4.5M13 8v3M16.5 8v4.5"/></svg>
     <span>పొడవు</span>
+  </button>
+  <button type="button" class="tab" data-to="weight">
+    <svg viewBox="0 0 24 24"><path d="M12 4.5v15M6 19.5h12M4.5 7.5h15"/><path d="M7 7.5l-3 6a3 3 0 0 0 6 0zM17 7.5l-3 6a3 3 0 0 0 6 0z"/><circle cx="12" cy="4" r="1"/></svg>
+    <span>బరువు</span>
   </button>
   <button type="button" class="tab" data-to="plot">
     <svg viewBox="0 0 24 24"><path d="M4 6l11-2.5 5.5 14.5L5 20z"/><path d="M4 6l16.5 12" stroke-dasharray="2 2.2"/></svg>

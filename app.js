@@ -23,6 +23,17 @@ const LENGTH_UNITS = [
   { id: 'cm', te: 'సెంటీమీటర్లు', en: 'Centimetres', f: 0.01 },
 ];
 
+// base: grams
+const WEIGHT_UNITS = [
+  { id: 'g', te: 'గ్రాములు', en: 'Grams', f: 1 },
+  { id: 'kasu', te: 'కాసు / సవర', en: 'Kasu · Sovereign · 8 g', f: 8 },
+  { id: 'tulam', te: 'తులం', en: 'Tola · 10 g (shops today)', f: 10 },
+  { id: 'oldtulam', te: 'పాత తులం', en: 'Old tola · 11.664 g', f: 11.664 },
+  { id: 'kg', te: 'కిలోగ్రాములు', en: 'Kilograms', f: 1000 },
+  { id: 'mg', te: 'మిల్లీగ్రాములు', en: 'Milligrams', f: 0.001 },
+  { id: 'oz', te: 'ఔన్సులు (బంగారం)', en: 'Troy ounce · 31.1 g', f: 31.1034768 },
+];
+
 // plot side lengths → feet
 const LEN_TO_FT = { ft: 1, m: 1 / 0.3048, link: 0.66 };
 const LEN_SHORT = { ft: 'అడుగు', m: 'మీటర్', link: 'లింక్' };
@@ -708,6 +719,7 @@ function init() {
   initTabs();
   initConverter($('#area'), AREA_UNITS);
   initConverter($('#length'), LENGTH_UNITS);
+  initConverter($('#weight'), WEIGHT_UNITS);
   initPlot();
   initCalc();
   initInterest();
