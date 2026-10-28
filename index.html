@@ -43,6 +43,7 @@
     </div>
     <p class="hint">ఏ పెట్టెలోనైనా సంఖ్య వేయండి. మిగతావి వెంటనే మారుతాయి.</p>
     <div class="unit-list"></div>
+    <div class="pic" id="area-pic" hidden></div>
     <button class="btn-ghost clear" type="button">తుడిచేయి</button>
     <div class="facts">
       <div>1 సెంటు = 48.4 గజాలు = 435.6 చ. అడుగులు</div>
@@ -141,7 +142,8 @@
     </div>
 
     <div class="card diagram">
-      <svg id="plot-svg" viewBox="0 0 320 220" role="img" aria-label="స్థలం బొమ్మ"></svg>
+      <svg id="plot-svg" viewBox="0 0 360 250" role="img" aria-label="స్థలం బొమ్మ"></svg>
+      <p class="area-line" id="plot-area-line"></p>
       <p class="diagram-tip">బొమ్మలో ఏ వైపు నొక్కినా, ఆ కొలత పెట్టె వెలుగుతుంది.</p>
     </div>
 
@@ -160,6 +162,7 @@
       <p class="result-empty">పై పెట్టెల్లో కొలతలు అన్నీ వేస్తే, విస్తీర్ణం ఇక్కడ వస్తుంది.</p>
       <div id="plot-rows"></div>
     </div>
+    <div class="pic" id="plot-pic" hidden></div>
     <button class="btn-ghost" type="button" id="plot-clear">తుడిచేయి</button>
   </section>
 
@@ -254,6 +257,8 @@
       <div class="result-title">వడ్డీ</div>
       <p class="result-empty">అసలు, రేటు, కాలం వేస్తే వడ్డీ ఇక్కడ వస్తుంది.</p>
       <div class="big" id="int-interest">—</div>
+      <div class="split" aria-hidden="true"><i class="split-p"></i><i class="split-i"></i></div>
+      <div class="split-key"><span><i class="dot p"></i>అసలు <b class="kp"></b></span><span><i class="dot i"></i>వడ్డీ <b class="ki"></b></span></div>
       <div class="result-row"><span>మొత్తం (అసలు + వడ్డీ)</span><b id="int-total">—</b></div>
       <div class="result-row" id="int-monthly-row"><span>నెలకు వడ్డీ</span><b id="int-monthly">—</b></div>
       <div class="result-row"><span>కాలం</span><b id="int-period">—</b></div>
@@ -262,6 +267,8 @@
       <div class="result-title">నెలకు కట్టాల్సిన EMI</div>
       <p class="result-empty">అప్పు, రేటు, కాలం వేస్తే EMI ఇక్కడ వస్తుంది.</p>
       <div class="big" id="emi-amount">—</div>
+      <div class="split" aria-hidden="true"><i class="split-p"></i><i class="split-i"></i></div>
+      <div class="split-key"><span><i class="dot p"></i>అసలు <b class="kp"></b></span><span><i class="dot i"></i>వడ్డీ <b class="ki"></b></span></div>
       <div class="result-row"><span>మొత్తం వడ్డీ</span><b id="emi-interest">—</b></div>
       <div class="result-row"><span>మొత్తం కట్టేది (అసలు + వడ్డీ)</span><b id="emi-total">—</b></div>
       <div class="result-row"><span>వాయిదాలు</span><b id="emi-count">—</b></div>

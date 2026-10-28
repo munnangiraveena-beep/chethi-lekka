@@ -1,5 +1,5 @@
 // Bump the version whenever files change so phones pick up the update.
-const CACHE = 'chethi-lekka-v8';
+const CACHE = 'chethi-lekka-v9';
 const ASSETS = [
   '/',
   '/index.html',

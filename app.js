@@ -129,6 +129,22 @@ function plotGeometry(shape, v) {
   };
 }
 
+// ---------- area picture ----------
+
+// each level: small boxes of one unit inside big squares of the next unit up
+const PIC_LEVELS = [
+  { cell: 'చదరపు అడుగు', cells: 'చదరపు అడుగులు', block: 'గజం', cap: 9, sqft: 1 },
+  { cell: 'గజం', cells: 'గజాలు', block: 'సెంటు', cap: 48.4, sqft: 9 },
+  { cell: 'సెంటు', cells: 'సెంట్లు', block: 'ఎకరం', cap: 100, sqft: 435.6 },
+  { cell: 'ఎకరం', cells: 'ఎకరాలు', block: '100 ఎకరాలు', cap: 100, sqft: 43560 },
+];
+const PIC_MAX_BLOCKS = 12;
+
+// the smallest unit that still fits in a handful of big squares
+function picLevel(sqft) {
+  return PIC_LEVELS.find(L => sqft / L.sqft / L.cap <= PIC_MAX_BLOCKS) || PIC_LEVELS[PIC_LEVELS.length - 1];
+}
+
 // ---------- calculator ----------
 
 const OPS = '+−×÷';
@@ -329,6 +345,62 @@ function toast(msg, undo) {
 
 const CLEARED = 'అన్నీ తుడిచేశాం';
 
+// fills boxes one by one so the size of a piece of land can be seen; tap to see it big
+function areaPicture(el) {
+  el.innerHTML =
+    '<div class="pic-head"><b>బొమ్మలో చూడండి</b><span class="pic-tap">🔍 పెద్దగా</span></div>' +
+    '<div class="pic-grids"></div><p class="pic-sum"></p><p class="pic-legend"></p>' +
+    '<span class="pic-close">✕ మూసేయి</span>';
+  const grids = $('.pic-grids', el), sum = $('.pic-sum', el), legend = $('.pic-legend', el);
+  el.addEventListener('click', () => el.classList.toggle('open'));
+  let timer, lastKey = '';
+
+  function draw(sqft) {
+    el.hidden = !(sqft > 0);
+    if (el.hidden) { el.classList.remove('open'); lastKey = ''; return; }
+    const L = picLevel(sqft), v = sqft / L.sqft;
+    const key = L.cell + v.toFixed(3);
+    if (key === lastKey) return;
+    lastKey = key;
+
+    const blocks = Math.max(1, Math.min(PIC_MAX_BLOCKS, Math.ceil(v / L.cap - 1e-9)));
+    const shown = Math.min(v, blocks * L.cap);
+    const perBlock = Math.ceil(L.cap), cols = Math.ceil(Math.sqrt(L.cap));
+    const total = Math.ceil(shown);
+    let html = '', k = 0;
+    for (let b = 0; b < blocks; b++) {
+      html += `<div class="blk" style="--cols:${cols}">`;
+      for (let c = 0; c < perBlock; c++) {
+        // a 48.4-box square ends with a 0.4-wide box
+        const room = Math.min(1, L.cap - c);
+        const filled = Math.max(0, Math.min(room, shown - (b * L.cap + c)));
+        const width = room < 1 ? ` style="width:${room * 100}%"` : '';
+        const fill = filled > 0
+          ? `<b style="width:${filled / room * 100}%;animation-delay:${Math.round(900 * k++ / total)}ms"></b>`
+          : '';
+        html += `<i class="c"${width}>${fill}</i>`;
+      }
+      html += '</div>';
+    }
+    grids.innerHTML = html;
+    grids.dataset.n = blocks === 1 ? '1' : blocks <= 4 ? 'few' : 'many';
+    sum.innerHTML = `రంగు గడులు = <b>${fmt(v)} ${L.cells}</b>` +
+      (v > shown ? ` <small>(బొమ్మలో ${PIC_MAX_BLOCKS} ${L.block} మాత్రమే చూపాం)</small>` : '');
+    legend.textContent = `ప్రతి చిన్న గడి = 1 ${L.cell} · ప్రతి పెద్ద చతురస్రం = 1 ${L.block}`;
+  }
+
+  // wait for typing to pause so the boxes don't keep refilling on every key
+  return sqft => { clearTimeout(timer); timer = setTimeout(() => draw(sqft), 350); };
+}
+
+// two-colour bar: how much of the total is principal and how much is interest
+function setSplit(card, principal, interest) {
+  const pct = principal / (principal + interest) * 100;
+  $('.split-p', card).style.width = pct + '%';
+  $('.kp', card).textContent = Math.round(pct) + '%';
+  $('.ki', card).textContent = (100 - Math.round(pct)) + '%';
+}
+
 function initTextSize() {
   const STEPS = [0.9, 1, 1.15, 1.3, 1.45];
   const zin = $('#zoom-in'), zout = $('#zoom-out');
@@ -394,7 +466,7 @@ function initTabs() {
 
 // ---------- converters ----------
 
-function initConverter(root, units) {
+function initConverter(root, units, onChange = () => {}) {
   const list = $('.unit-list', root);
   const show = (inp, v) => {
     if (inp.value === v) return;
@@ -438,6 +510,7 @@ function initConverter(root, units) {
         o.row.classList.toggle('src', j === i && !isNaN(base));
         if (j !== i) o.set(base);
       });
+      onChange(base);
     }));
   });
 
@@ -445,10 +518,14 @@ function initConverter(root, units) {
     const saved = rows.map(r => ({ vals: r.inputs.map(i => i.value), src: r.row.classList.contains('src') }));
     if (!saved.some(s => s.vals.some(Boolean))) return;
     rows.forEach(r => { r.set(NaN); r.row.classList.remove('src'); });
-    toast(CLEARED, () => rows.forEach((r, i) => {
-      r.inputs.forEach((inp, k) => { inp.value = saved[i].vals[k]; });
-      r.row.classList.toggle('src', saved[i].src);
-    }));
+    onChange(NaN);
+    toast(CLEARED, () => {
+      rows.forEach((r, i) => {
+        r.inputs.forEach((inp, k) => { inp.value = saved[i].vals[k]; });
+        r.row.classList.toggle('src', saved[i].src);
+      });
+      onChange(rows[0].get());
+    });
   });
 }
 
@@ -475,6 +552,7 @@ const SHAPES = {
 function initPlot() {
   const state = { shape: 'rect', unit: 'ft', active: null, vals: { rect: {}, quad: {}, tri: {} } };
   const svg = $('#plot-svg'), fieldsEl = $('#plot-fields'), errEl = $('#plot-error');
+  const plotPic = areaPicture($('#plot-pic'));
 
   const rows = $('#plot-rows');
   const resultCells = AREA_UNITS.map(u => {
@@ -485,19 +563,20 @@ function initPlot() {
     return $('b', row);
   });
 
-  function draw(shape, v, real) {
+  function draw(shape, v, real, labels, center) {
     let g = plotGeometry(shape, v);
     if (g.pts.some(p => p.some(c => !Number.isFinite(c)))) g = plotGeometry(shape, SHAPES[shape].sample);
 
-    const W = 320, H = 220, pad = 30;
+    // extra room at the sides for the measurement labels
+    const W = 360, H = 250, padX = 74, padY = 46;
     const xs = g.pts.map(p => p[0]), ys = g.pts.map(p => p[1]);
     const minX = Math.min(...xs), minY = Math.min(...ys);
     const w = Math.max(...xs) - minX || 1, h = Math.max(...ys) - minY || 1;
-    const s = Math.min((W - 2 * pad) / w, (H - 2 * pad) / h);
+    const s = Math.min((W - 2 * padX) / w, (H - 2 * padY) / h);
     const ox = (W - w * s) / 2, oy = (H - h * s) / 2;
     const P = g.pts.map(([x, y]) => [ox + (x - minX) * s, oy + (y - minY) * s]);
-    const cx = P.reduce((a, p) => a + p[0], 0) / P.length;
-    const cy = P.reduce((a, p) => a + p[1], 0) / P.length;
+    const mid = pts => [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
+    const [cx, cy] = mid(P);
 
     const line = (cls, [i, j, , k]) =>
       `<line class="${cls}" data-k="${k}" x1="${P[i][0]}" y1="${P[i][1]}" x2="${P[j][0]}" y2="${P[j][1]}"/>`;
@@ -505,6 +584,8 @@ function initPlot() {
     const badge = (x, y, label, k, cls = '') =>
       `<g class="bdg ${cls}" data-k="${k}"><circle class="hit-c" cx="${x}" cy="${y}" r="22"/>` +
       `<circle cx="${x}" cy="${y}" r="13"/><text x="${x}" y="${y}">${label}</text></g>`;
+    const value = (x, y, k, anchor = 'middle') =>
+      labels[k] ? `<text class="len" data-k="${k}" x="${x}" y="${y}" text-anchor="${anchor}">${labels[k]}</text>` : '';
 
     const all = g.diag ? [...g.edges, g.diag] : g.edges;
     let out = `<polygon class="poly" points="${P.map(p => p.join(',')).join(' ')}"/>`;
@@ -515,13 +596,25 @@ function initPlot() {
     for (const [i, j, label, k] of g.edges) {
       const mx = (P[i][0] + P[j][0]) / 2, my = (P[i][1] + P[j][1]) / 2;
       const dx = mx - cx, dy = my - cy, len = Math.hypot(dx, dy) || 1;
-      out += badge(mx + dx / len * 17, my + dy / len * 17, label, k);
+      const ux = dx / len, uy = dy / len;
+      out += badge(mx + ux * 17, my + uy * 17, label, k);
+      // under the badge for left/right sides, beyond it for top/bottom sides
+      out += Math.abs(ux) > Math.abs(uy)
+        ? value(mx + ux * 17, my + uy * 17 + 30, k)
+        : value(mx + ux * 40, my + uy * 40 + 4, k);
     }
+
     if (g.diag) {
+      // the diagonal's length sits inside the lower half, clear of its badge
       const [i, j, label, k] = g.diag;
-      out += badge((P[i][0] + P[j][0]) / 2, (P[i][1] + P[j][1]) / 2, label, k, 'd');
+      const mx = (P[i][0] + P[j][0]) / 2, my = (P[i][1] + P[j][1]) / 2;
+      const [bx, by] = mid([P[0], P[2], P[3]]);
+      const dx = bx - mx, dy = by - my, len = Math.hypot(dx, dy) || 1;
+      out += badge(mx, my, label, k, 'd');
+      out += value(mx + dx / len * 30, my + dy / len * 30 + 4, k);
     }
     svg.innerHTML = out;
+    $('#plot-area-line').innerHTML = center ? `విస్తీర్ణం: <b>${center[0]}</b> · ${center[1]}` : '';
     svg.classList.toggle('ghost', !real);
     setActive(state.active);
   }
@@ -531,6 +624,17 @@ function initPlot() {
     state.active = k;
     $$('[data-k]', svg).forEach(el => el.classList.toggle('on', el.dataset.k === k));
     $$('.field-row', fieldsEl).forEach(r => r.classList.toggle('on', r.dataset.k === k));
+  }
+
+  // what was typed for one side, written short for the drawing
+  function sideLabel(k) {
+    const val = state.vals[state.shape][k];
+    if (!val || !(parseNum(val.main) > 0 || parseNum(val.inch) > 0)) return '';
+    if (state.unit === 'ft') {
+      const ft = parseNum(val.main) || 0, inch = parseNum(val.inch) || 0;
+      return `${fmt(ft)} అ` + (inch ? ` ${fmt(inch)} అం` : '');
+    }
+    return `${fmt(parseNum(val.main))} ${state.unit === 'm' ? 'మీ' : 'లిం'}`;
   }
 
   // value of one side in the chosen unit
@@ -552,8 +656,10 @@ function initPlot() {
     const area = complete ? plotArea(shape, v) : NaN;
     const ok = complete && area > 0;
     errEl.hidden = !complete || ok;
-    draw(shape, v, ok);
     const sqft = area * LEN_TO_FT[unit] ** 2;
+    const labels = Object.fromEntries(SHAPES[shape].fields.map(([k]) => [k, sideLabel(k)]));
+    draw(shape, v, ok, labels, ok && [`${fmt(sqft / 435.6)} సెంట్లు`, `${fmt(sqft / 9)} గజాలు`]);
+    plotPic(ok ? sqft : NaN);
     $('#plot-result').classList.toggle('empty', !ok);
     AREA_UNITS.forEach((u, i) => setText(resultCells[i], ok ? fmt(sqft / u.f) : '—'));
   }
@@ -757,6 +863,7 @@ function initInterest() {
       setText($('#emi-interest'), ok ? fmtRs(emi * n - p) : '—');
       setText($('#emi-total'), ok ? fmtRs(emi * n) : '—');
       setText($('#emi-count'), n > 0 ? `${n} నెలలు` : '—');
+      if (ok) setSplit($('#emi-result'), p, emi * n - p);
       return;
     }
 
@@ -785,6 +892,7 @@ function initInterest() {
     setText(out.interest, fmtRs(interest));
     setText(out.total, fmtRs(p + interest));
     setText(out.monthly, fmtRs(p * annual / 1200));
+    setSplit($('#int-result'), p, interest);
   }
 
   for (const el of [P, R, Y, M, D]) el.addEventListener('input', () => { cleanNumInput(el); compute(); });
@@ -842,7 +950,7 @@ function initInterest() {
 function init() {
   initTextSize();
   initTabs();
-  initConverter($('#area'), AREA_UNITS);
+  initConverter($('#area'), AREA_UNITS, areaPicture($('#area-pic')));
   initConverter($('#length'), LENGTH_UNITS);
   initConverter($('#weight'), WEIGHT_UNITS);
   initConverter($('#volume'), VOLUME_UNITS);
