@@ -35,6 +35,12 @@
 
   <!-- విస్తీర్ణం (area) -->
   <section class="screen active" id="area" data-title="విస్తీర్ణం మార్పిడి">
+    <div class="seg conv-pick" data-conv>
+      <button type="button" data-v="area">విస్తీర్ణం</button>
+      <button type="button" data-v="length">పొడవు</button>
+      <button type="button" data-v="weight">బరువు</button>
+      <button type="button" data-v="volume">ఘనపరిమాణం</button>
+    </div>
     <p class="hint">ఏ పెట్టెలోనైనా సంఖ్య వేయండి. మిగతావి వెంటనే మారుతాయి.</p>
     <div class="unit-list"></div>
     <button class="btn-ghost clear" type="button">తుడిచేయి</button>
@@ -49,6 +55,12 @@
 
   <!-- పొడవు (length) -->
   <section class="screen" id="length" data-title="పొడవు మార్పిడి">
+    <div class="seg conv-pick" data-conv>
+      <button type="button" data-v="area">విస్తీర్ణం</button>
+      <button type="button" data-v="length">పొడవు</button>
+      <button type="button" data-v="weight">బరువు</button>
+      <button type="button" data-v="volume">ఘనపరిమాణం</button>
+    </div>
     <p class="hint">ఏ పెట్టెలోనైనా సంఖ్య వేయండి. మిగతావి వెంటనే మారుతాయి.</p>
     <div class="unit-list"></div>
     <button class="btn-ghost clear" type="button">తుడిచేయి</button>
@@ -62,6 +74,12 @@
 
   <!-- బరువు (weight) -->
   <section class="screen" id="weight" data-title="బరువు మార్పిడి">
+    <div class="seg conv-pick" data-conv>
+      <button type="button" data-v="area">విస్తీర్ణం</button>
+      <button type="button" data-v="length">పొడవు</button>
+      <button type="button" data-v="weight">బరువు</button>
+      <button type="button" data-v="volume">ఘనపరిమాణం</button>
+    </div>
     <p class="hint">ఏ పెట్టెలోనైనా సంఖ్య వేయండి. మిగతావి వెంటనే మారుతాయి.</p>
     <div class="unit-list"></div>
     <button class="btn-ghost clear" type="button">తుడిచేయి</button>
@@ -70,6 +88,27 @@
       <div>1 తులం = 10 గ్రాములు (ఇప్పుడు షాపుల్లో)</div>
       <div>పాత తులం = 11.664 గ్రాములు</div>
       <div>1 కిలో = 1,000 గ్రాములు = 125 సవరలు</div>
+      <div>1 క్వింటాల్ = 100 కిలోలు</div>
+      <div>1 టన్ను = 1,000 కిలోలు = 10 క్వింటాళ్లు</div>
+    </div>
+  </section>
+
+  <!-- ఘనపరిమాణం (volume) -->
+  <section class="screen" id="volume" data-title="ఘనపరిమాణం">
+    <div class="seg conv-pick" data-conv>
+      <button type="button" data-v="area">విస్తీర్ణం</button>
+      <button type="button" data-v="length">పొడవు</button>
+      <button type="button" data-v="weight">బరువు</button>
+      <button type="button" data-v="volume">ఘనపరిమాణం</button>
+    </div>
+    <p class="hint">ఏ పెట్టెలోనైనా సంఖ్య వేయండి. మిగతావి వెంటనే మారుతాయి.</p>
+    <div class="unit-list"></div>
+    <button class="btn-ghost clear" type="button">తుడిచేయి</button>
+    <div class="facts">
+      <div>1 లీటరు = 1,000 మిల్లీలీటర్లు</div>
+      <div>1 ఘనపు అడుగు = 28.32 లీటర్లు</div>
+      <div>1 ఘనపు మీటరు = 1,000 లీటర్లు</div>
+      <div>1 గ్యాలన్ = 3.785 లీటర్లు</div>
     </div>
   </section>
 
@@ -247,17 +286,9 @@
 </main>
 
 <nav class="tabbar" id="tabbar">
-  <button type="button" class="tab on" data-to="area">
-    <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 12h17M12 3.5v17"/></svg>
-    <span>విస్తీర్ణం</span>
-  </button>
-  <button type="button" class="tab" data-to="length">
-    <svg viewBox="0 0 24 24"><rect x="2.5" y="8" width="19" height="8" rx="1.5"/><path d="M6 8v3M9.5 8v4.5M13 8v3M16.5 8v4.5"/></svg>
-    <span>పొడవు</span>
-  </button>
-  <button type="button" class="tab" data-to="weight">
-    <svg viewBox="0 0 24 24"><path d="M12 4.5v15M6 19.5h12M4.5 7.5h15"/><path d="M7 7.5l-3 6a3 3 0 0 0 6 0zM17 7.5l-3 6a3 3 0 0 0 6 0z"/><circle cx="12" cy="4" r="1"/></svg>
-    <span>బరువు</span>
+  <button type="button" class="tab on" data-to="convert" data-group="area length weight volume">
+    <svg viewBox="0 0 24 24"><path d="M4 8h14l-3.5-3.5M20 16H6l3.5 3.5"/></svg>
+    <span>మార్పిడి</span>
   </button>
   <button type="button" class="tab" data-to="plot">
     <svg viewBox="0 0 24 24"><path d="M4 6l11-2.5 5.5 14.5L5 20z"/><path d="M4 6l16.5 12" stroke-dasharray="2 2.2"/></svg>

@@ -30,8 +30,19 @@ const WEIGHT_UNITS = [
   { id: 'tulam', te: 'తులం', en: 'Tola · 10 g (shops today)', f: 10 },
   { id: 'oldtulam', te: 'పాత తులం', en: 'Old tola · 11.664 g', f: 11.664 },
   { id: 'kg', te: 'కిలోగ్రాములు', en: 'Kilograms', f: 1000 },
+  { id: 'quintal', te: 'క్వింటాళ్లు', en: 'Quintals · 100 kg', f: 100000 },
+  { id: 't', te: 'టన్నులు', en: 'Tonnes · 1,000 kg', f: 1000000 },
   { id: 'mg', te: 'మిల్లీగ్రాములు', en: 'Milligrams', f: 0.001 },
   { id: 'oz', te: 'ఔన్సులు (బంగారం)', en: 'Troy ounce · 31.1 g', f: 31.1034768 },
+];
+
+// base: litres
+const VOLUME_UNITS = [
+  { id: 'l', te: 'లీటర్లు', en: 'Litres', f: 1 },
+  { id: 'ml', te: 'మిల్లీలీటర్లు', en: 'Millilitres', f: 0.001 },
+  { id: 'cuft', te: 'ఘనపు అడుగులు', en: 'Cubic feet', f: 28.316846592 },
+  { id: 'cum', te: 'ఘనపు మీటర్లు', en: 'Cubic metres', f: 1000 },
+  { id: 'gal', te: 'గ్యాలన్లు', en: 'Gallons (US)', f: 3.785411784 },
 ];
 
 // plot side lengths → feet
@@ -237,7 +248,14 @@ function cleanNumInput(input) {
   return v;
 }
 
+function fitNum(el) {
+  const n = el.value.length;
+  el.classList.toggle('long', n > 8 && n <= 11);
+  el.classList.toggle('xlong', n > 11);
+}
+
 function enhanceNum(el) {
+  el.addEventListener('input', () => fitNum(el));
   el.type = 'text';
   el.inputMode = 'decimal';
   el.autocomplete = 'off';
@@ -339,7 +357,8 @@ function initTextSize() {
 
 function initTabs() {
   const main = $('#main'), title = $('#title');
-  const order = [...$$('.tab').map(t => t.dataset.to), 'about'];
+  const CONVERTERS = ['area', 'length', 'weight', 'volume'];
+  const order = [...CONVERTERS, 'plot', 'calc', 'interest', 'about'];
   let current = null;
   const show = id => {
     const screen = document.getElementById(id);
@@ -352,15 +371,21 @@ function initTabs() {
     }
     current = id;
     $$('.screen').forEach(s => s.classList.toggle('active', s === screen));
-    $$('.tab').forEach(t => t.classList.toggle('on', t.dataset.to === id));
+    $$('.tab').forEach(t => t.classList.toggle('on', (t.dataset.group || t.dataset.to).split(' ').includes(id)));
+    $$('[data-conv]', screen).forEach(el => setSeg(el, id));
     title.textContent = screen.dataset.title;
     main.scrollTop = 0;
     if (id !== 'about') store.set('tab', id);
+    if (CONVERTERS.includes(id)) store.set('conv', id);
   };
   $('#tabbar').addEventListener('click', e => {
     const t = e.target.closest('.tab');
-    if (t) show(t.dataset.to);
+    if (t) show(t.dataset.to === 'convert' ? store.get('conv') || 'area' : t.dataset.to);
   });
+  $$('[data-conv]').forEach(el => el.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (b) show(b.dataset.v);
+  }));
   $('#about-btn').addEventListener('click', () => show('about'));
   show(location.hash.slice(1) || store.get('tab') || 'area');
 }
@@ -372,6 +397,7 @@ function initConverter(root, units) {
   const show = (inp, v) => {
     if (inp.value === v) return;
     inp.value = v;
+    fitNum(inp);
     if (v) flash(inp);
   };
   // each row knows how to read its value into the base unit and show a base value
@@ -817,6 +843,7 @@ function init() {
   initConverter($('#area'), AREA_UNITS);
   initConverter($('#length'), LENGTH_UNITS);
   initConverter($('#weight'), WEIGHT_UNITS);
+  initConverter($('#volume'), VOLUME_UNITS);
   initPlot();
   initCalc();
   initInterest();

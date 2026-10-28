@@ -4,7 +4,8 @@ A tiny Telugu web app for everyday land and money calculations, made for elders.
 
 - **విస్తీర్ణం (area):** gajam, cents, sq.ft, sq.m, acres. Type in any box and the others update.
 - **పొడవు (length):** links, feet + inches, feet, inches, metres, centimetres.
-- **బరువు (weight):** grams, savara (8 g), tulam (10 g), old tulam (11.664 g), kg, mg, troy ounce.
+- **బరువు (weight):** grams, savara (8 g), tulam (10 g), old tulam (11.664 g), kg, quintal, tonne, mg, troy ounce.
+- **ఘనపరిమాణం (volume):** litres, millilitres, cubic feet, cubic metres, US gallons.
 - **స్థలం (plot area):** rectangle, triangle, or any 4-sided plot (4 sides + 1 diagonal). Draws the shape as you type and shows the area in every unit. You can add a photo of the plot for reference; it stays on the phone.
 - **లెక్కలు (calculator):** a simple calculator with Indian number grouping (1,00,000).
 - **వడ్డీ (interest):** rupee interest (₹ per ₹100 per month) or % per year; simple or compound; a duration or two dates.
