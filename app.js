@@ -21,6 +21,8 @@ const LENGTH_UNITS = [
   { id: 'in', te: 'అంగుళాలు', en: 'Inches', f: 0.0254 },
   { id: 'm', te: 'మీటర్లు', en: 'Metres', f: 1 },
   { id: 'cm', te: 'సెంటీమీటర్లు', en: 'Centimetres', f: 0.01 },
+  { id: 'km', te: 'కిలోమీటర్లు', en: 'Kilometres', f: 1000 },
+  { id: 'mile', te: 'మైళ్లు', en: 'Miles', f: 1609.344 },
 ];
 
 // base: grams
