@@ -16,7 +16,14 @@
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-<header class="topbar"><h1 id="title">విస్తీర్ణం మార్పిడి</h1></header>
+<header class="topbar">
+  <div class="topbar-in">
+    <h1 id="title">విస్తీర్ణం మార్పిడి</h1>
+    <button type="button" class="about-btn" id="about-btn" aria-label="మా గురించి">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5h.01"/></svg>
+    </button>
+  </div>
+</header>
 
 <main id="main">
 
@@ -27,8 +34,10 @@
     <button class="btn-ghost clear" type="button">తుడిచేయి</button>
     <div class="facts">
       <div>1 గజం = 9 చదరపు అడుగులు</div>
+      <div>1 అంకణం = 8 గజాలు = 72 చ. అడుగులు</div>
       <div>1 సెంటు = 48.4 గజాలు = 435.6 చ. అడుగులు</div>
-      <div>1 ఎకరం = 100 సెంట్లు = 4,840 గజాలు</div>
+      <div>1 గుంట = 121 గజాలు = 2.5 సెంట్లు</div>
+      <div>1 ఎకరం = 100 సెంట్లు = 40 గుంటలు = 4,840 గజాలు</div>
     </div>
   </section>
 
@@ -38,6 +47,7 @@
     <div class="unit-list"></div>
     <button class="btn-ghost clear" type="button">తుడిచేయి</button>
     <div class="facts">
+      <div>1 అడుగు = 12 అంగుళాలు</div>
       <div>1 లింకు = 0.66 అడుగులు (7.92 అంగుళాలు)</div>
       <div>100 లింకులు = 1 గొలుసు = 66 అడుగులు</div>
       <div>1 మీటరు = 3.28 అడుగులు = 100 సెంటీమీటర్లు</div>
@@ -73,6 +83,7 @@
 
     <div class="card diagram">
       <svg id="plot-svg" viewBox="0 0 320 220" role="img" aria-label="స్థలం బొమ్మ"></svg>
+      <p class="diagram-tip">బొమ్మలో ఏ వైపు నొక్కినా, ఆ కొలత పెట్టె వెలుగుతుంది.</p>
     </div>
 
     <div class="field-label">కొలతలు దేనిలో?</div>
@@ -126,8 +137,13 @@
 
   <!-- వడ్డీ (interest) -->
   <section class="screen" id="interest" data-title="వడ్డీ లెక్క">
+    <div class="seg kind" id="int-kind">
+      <button type="button" data-v="interest" class="on">వడ్డీ లెక్క</button>
+      <button type="button" data-v="emi">EMI (నెల వాయిదా)</button>
+    </div>
+
     <div class="card">
-      <label class="field-label" for="int-p">అసలు (ఇచ్చిన / తీసుకున్న డబ్బు)</label>
+      <label class="field-label" for="int-p" id="int-p-label">అసలు (ఇచ్చిన / తీసుకున్న డబ్బు)</label>
       <div class="affix"><span class="pre">₹</span><input id="int-p" class="num"></div>
     </div>
 
@@ -142,7 +158,7 @@
     </div>
 
     <div class="card">
-      <div class="field-label">ఎంత కాలం?</div>
+      <div class="field-label" id="int-time-label">ఎంత కాలం?</div>
       <div class="seg" id="int-time">
         <button type="button" data-v="dur" class="on">కాలం వేయండి</button>
         <button type="button" data-v="dates">తేదీల మధ్య</button>
@@ -150,7 +166,7 @@
       <div class="dur3" id="int-dur">
         <label><input id="int-y" class="num"><span>సంవత్సరాలు</span></label>
         <label><input id="int-m" class="num"><span>నెలలు</span></label>
-        <label><input id="int-d" class="num"><span>రోజులు</span></label>
+        <label id="int-d-wrap"><input id="int-d" class="num"><span>రోజులు</span></label>
       </div>
       <div id="int-dates" hidden>
         <label class="date-row"><span>ఇచ్చిన తేదీ</span><input type="date" id="int-from"></label>
@@ -158,7 +174,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="int-type-card">
       <div class="field-label">వడ్డీ రకం</div>
       <div class="seg" id="int-type">
         <button type="button" data-v="simple" class="on">సాధారణ వడ్డీ</button>
@@ -174,14 +190,37 @@
       </div>
     </div>
 
-    <div class="result">
+    <div class="result" id="int-result">
       <div class="result-title">వడ్డీ</div>
       <div class="big" id="int-interest">—</div>
       <div class="result-row"><span>మొత్తం (అసలు + వడ్డీ)</span><b id="int-total">—</b></div>
       <div class="result-row" id="int-monthly-row"><span>నెలకు వడ్డీ</span><b id="int-monthly">—</b></div>
       <div class="result-row"><span>కాలం</span><b id="int-period">—</b></div>
     </div>
+    <div class="result" id="emi-result" hidden>
+      <div class="result-title">నెలకు కట్టాల్సిన EMI</div>
+      <div class="big" id="emi-amount">—</div>
+      <div class="result-row"><span>మొత్తం వడ్డీ</span><b id="emi-interest">—</b></div>
+      <div class="result-row"><span>మొత్తం కట్టేది (అసలు + వడ్డీ)</span><b id="emi-total">—</b></div>
+      <div class="result-row"><span>వాయిదాలు</span><b id="emi-count">—</b></div>
+    </div>
     <button class="btn-ghost" type="button" id="int-clear">తుడిచేయి</button>
+  </section>
+
+  <!-- మా గురించి (about / contact) -->
+  <section class="screen" id="about" data-title="మా గురించి">
+    <div class="card about">
+      <img src="/icons/icon.svg" width="72" height="72" alt="">
+      <h2>చేతి లెక్క</h2>
+      <p>భూమి కొలతలు, స్థలం విస్తీర్ణం, వడ్డీ, EMI లెక్కలు — అన్నీ తెలుగులో, ఒకే చోట. ఇంటర్నెట్ లేకపోయినా పనిచేస్తుంది.</p>
+    </div>
+    <div class="card">
+      <div class="field-label">సంప్రదించండి</div>
+      <p class="contact-name">Raveena Munnangi</p>
+      <a class="btn-primary" href="mailto:munnangi.raveena@gmail.com?subject=%E0%B0%9A%E0%B1%87%E0%B0%A4%E0%B0%BF%20%E0%B0%B2%E0%B1%86%E0%B0%95%E0%B1%8D%E0%B0%95">✉️ munnangi.raveena@gmail.com</a>
+      <p class="hint small">సూచనలు, తప్పులు లేదా కొత్త లెక్కలు కావాలంటే ఈమెయిల్ చేయండి.</p>
+    </div>
+    <p class="hint small center"><a href="https://github.com/munnangiraveena-beep/chethi-lekka">GitHub</a> లో ఉచితంగా అందుబాటులో ఉంది.</p>
   </section>
 </main>
 

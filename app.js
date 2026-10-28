@@ -5,16 +5,20 @@
 // base: square feet
 const AREA_UNITS = [
   { id: 'gajam', te: 'గజాలు', en: 'Gajam · sq. yard', f: 9 },
+  { id: 'ankanam', te: 'అంకణాలు', en: 'Ankanam · 72 sq. ft', f: 72 },
   { id: 'cents', te: 'సెంట్లు', en: 'Cents', f: 435.6 },
+  { id: 'gunta', te: 'గుంటలు', en: 'Gunta · 1,089 sq. ft', f: 1089 },
+  { id: 'acre', te: 'ఎకరాలు', en: 'Acres', f: 43560 },
   { id: 'sqft', te: 'చదరపు అడుగులు', en: 'Sq. feet', f: 1 },
   { id: 'sqm', te: 'చదరపు మీటర్లు', en: 'Sq. metres', f: 10.7639104 },
-  { id: 'acre', te: 'ఎకరాలు', en: 'Acres', f: 43560 },
 ];
 
-// base: metres
+// base: metres; the feet + inches pair counts in inches
 const LENGTH_UNITS = [
   { id: 'link', te: 'లింకులు', en: 'Links', f: 0.201168 },
-  { id: 'ft', te: 'అడుగులు', en: 'Feet', f: 0.3048 },
+  { id: 'ftin', te: 'అడుగులు + అంగుళాలు', en: 'Feet + inches', f: 0.0254, pair: true },
+  { id: 'ft', te: 'అడుగులు', en: 'Feet (decimal)', f: 0.3048 },
+  { id: 'in', te: 'అంగుళాలు', en: 'Inches', f: 0.0254 },
   { id: 'm', te: 'మీటర్లు', en: 'Metres', f: 1 },
   { id: 'cm', te: 'సెంటీమీటర్లు', en: 'Centimetres', f: 0.01 },
 ];
@@ -37,6 +41,19 @@ function fmt(n) {
   const a = Math.abs(n);
   const digits = a >= 1000 ? 2 : a >= 1 ? 3 : a >= 0.01 ? 4 : 6;
   return n.toLocaleString('en-IN', { maximumFractionDigits: digits });
+}
+
+// feet + inches → total inches; NaN when both are empty
+function ftInToInches(ft, inch) {
+  if (isNaN(ft) && isNaN(inch)) return NaN;
+  return (ft || 0) * 12 + (inch || 0);
+}
+
+// total inches → [feet, inches], inches to one decimal
+function inchesToFtIn(total) {
+  const t = Math.round(total * 10) / 10;
+  const ft = Math.floor(t / 12);
+  return [ft, Math.round((t - ft * 12) * 10) / 10];
 }
 
 function fmtRs(n) {
@@ -68,19 +85,23 @@ function apex(base, fromStart, fromEnd, up) {
 }
 
 function plotGeometry(shape, v) {
+  // edges: [from corner, to corner, badge label, field key]
   if (shape === 'rect') {
-    return { pts: [[0, 0], [v.l, 0], [v.l, v.w], [0, v.w]], edges: [[0, 1, '1'], [1, 2, '2']] };
+    return { pts: [[0, 0], [v.l, 0], [v.l, v.w], [0, v.w]], edges: [[0, 1, '1', 'l'], [1, 2, '2', 'w']] };
   }
   if (shape === 'tri') {
-    return { pts: [[0, 0], [v.a, 0], apex(v.a, v.c, v.b, true)], edges: [[0, 1, '1'], [1, 2, '2'], [2, 0, '3']] };
+    return {
+      pts: [[0, 0], [v.a, 0], apex(v.a, v.c, v.b, true)],
+      edges: [[0, 1, '1', 'a'], [1, 2, '2', 'b'], [2, 0, '3', 'c']],
+    };
   }
   // A, B, C, D around the plot with diagonal A–C laid flat, then tilted so A is top-left
   const raw = [[0, 0], apex(v.e, v.a, v.b, true), [v.e, 0], apex(v.e, v.d, v.c, false)];
   const t = 35 * Math.PI / 180, cos = Math.cos(t), sin = Math.sin(t);
   return {
     pts: raw.map(([x, y]) => [x * cos - y * sin, x * sin + y * cos]),
-    edges: [[0, 1, '1'], [1, 2, '2'], [2, 3, '3'], [3, 0, '4']],
-    diag: [0, 2, 'క'],
+    edges: [[0, 1, '1', 'a'], [1, 2, '2', 'b'], [2, 3, '3', 'c'], [3, 0, '4', 'd']],
+    diag: [0, 2, 'క', 'e'],
   };
 }
 
@@ -167,6 +188,14 @@ function interestFor(P, annualRate, months, compound, perYear) {
   return P * Math.pow(1 + annualRate / 100 / perYear, perYear * years) - P;
 }
 
+// monthly instalment on a reducing balance
+function emiFor(P, annualRate, months) {
+  const r = annualRate / 1200;
+  if (r === 0) return P / months;
+  const g = Math.pow(1 + r, months);
+  return P * r * g / (g - 1);
+}
+
 function periodText({ y, m, d }) {
   const parts = [];
   if (y) parts.push(`${fmt(y)} ${y === 1 ? 'సంవత్సరం' : 'సంవత్సరాలు'}`);
@@ -213,6 +242,22 @@ function numInput() {
   return enhanceNum(el);
 }
 
+// two boxes side by side: feet and inches
+function ftInPair() {
+  const wrap = document.createElement('span');
+  wrap.className = 'pair';
+  const ft = numInput(), inch = numInput();
+  for (const [inp, caption] of [[ft, 'అడుగులు'], [inch, 'అంగుళాలు']]) {
+    const cell = document.createElement('span');
+    cell.className = 'pair-cell';
+    const small = document.createElement('small');
+    small.textContent = caption;
+    cell.append(inp, small);
+    wrap.append(cell);
+  }
+  return { wrap, ft, inch };
+}
+
 function segmented(el, onChange) {
   el.addEventListener('click', e => {
     const b = e.target.closest('button');
@@ -237,12 +282,13 @@ function initTabs() {
     $$('.tab').forEach(t => t.classList.toggle('on', t.dataset.to === id));
     title.textContent = screen.dataset.title;
     main.scrollTop = 0;
-    store.set('tab', id);
+    if (id !== 'about') store.set('tab', id);
   };
   $('#tabbar').addEventListener('click', e => {
     const t = e.target.closest('.tab');
     if (t) show(t.dataset.to);
   });
+  $('#about-btn').addEventListener('click', () => show('about'));
   show(location.hash.slice(1) || store.get('tab') || 'area');
 }
 
@@ -250,29 +296,48 @@ function initTabs() {
 
 function initConverter(root, units) {
   const list = $('.unit-list', root);
-  const inputs = units.map(u => {
+  // each row knows how to read its value into the base unit and show a base value
+  const rows = units.map(u => {
     const row = document.createElement('label');
     row.className = 'unit-row';
     row.innerHTML = `<span class="unit-name">${u.te}<small>${u.en}</small></span>`;
-    const inp = numInput();
-    inp.addEventListener('focus', () => setTimeout(() => inp.select(), 0));
-    row.append(inp);
+    let inputs, get, set;
+    if (u.pair) {
+      const p = ftInPair();
+      row.append(p.wrap);
+      inputs = [p.ft, p.inch];
+      get = () => ftInToInches(parseNum(p.ft.value), parseNum(p.inch.value)) * u.f;
+      set = base => {
+        if (isNaN(base)) { p.ft.value = p.inch.value = ''; return; }
+        const [ft, inch] = inchesToFtIn(base / u.f);
+        p.ft.value = ft.toLocaleString('en-IN');
+        p.inch.value = String(inch);
+      };
+    } else {
+      const inp = numInput();
+      row.append(inp);
+      inputs = [inp];
+      get = () => parseNum(inp.value) * u.f;
+      set = base => { inp.value = isNaN(base) ? '' : fmt(base / u.f); };
+    }
+    inputs.forEach(inp => inp.addEventListener('focus', () => setTimeout(() => inp.select(), 0)));
     list.append(row);
-    return inp;
+    return { row, inputs, get, set };
   });
 
-  inputs.forEach((inp, i) => {
-    inp.addEventListener('input', () => {
-      const v = parseNum(cleanNumInput(inp));
-      inputs.forEach((o, j) => {
-        o.parentElement.classList.toggle('src', j === i && !isNaN(v));
-        if (j !== i) o.value = isNaN(v) ? '' : fmt(v * units[i].f / units[j].f);
+  rows.forEach((r, i) => {
+    r.inputs.forEach(inp => inp.addEventListener('input', () => {
+      cleanNumInput(inp);
+      const base = r.get();
+      rows.forEach((o, j) => {
+        o.row.classList.toggle('src', j === i && !isNaN(base));
+        if (j !== i) o.set(base);
       });
-    });
+    }));
   });
 
   $('.clear', root).addEventListener('click', () => {
-    inputs.forEach(o => { o.value = ''; o.parentElement.classList.remove('src'); });
+    rows.forEach(r => { r.set(NaN); r.row.classList.remove('src'); });
   });
 }
 
@@ -297,7 +362,7 @@ const SHAPES = {
 };
 
 function initPlot() {
-  const state = { shape: 'rect', unit: 'ft', vals: { rect: {}, quad: {}, tri: {} } };
+  const state = { shape: 'rect', unit: 'ft', active: null, vals: { rect: {}, quad: {}, tri: {} } };
   const svg = $('#plot-svg'), fieldsEl = $('#plot-fields'), errEl = $('#plot-error');
 
   const rows = $('#plot-rows');
@@ -323,26 +388,46 @@ function initPlot() {
     const cx = P.reduce((a, p) => a + p[0], 0) / P.length;
     const cy = P.reduce((a, p) => a + p[1], 0) / P.length;
 
-    const badge = (x, y, label, cls = '') =>
-      `<g class="bdg ${cls}"><circle cx="${x}" cy="${y}" r="13"/><text x="${x}" y="${y}">${label}</text></g>`;
+    const line = (cls, [i, j, , k]) =>
+      `<line class="${cls}" data-k="${k}" x1="${P[i][0]}" y1="${P[i][1]}" x2="${P[j][0]}" y2="${P[j][1]}"/>`;
+    // the larger clear circle is a finger-sized tap target
+    const badge = (x, y, label, k, cls = '') =>
+      `<g class="bdg ${cls}" data-k="${k}"><circle class="hit-c" cx="${x}" cy="${y}" r="22"/>` +
+      `<circle cx="${x}" cy="${y}" r="13"/><text x="${x}" y="${y}">${label}</text></g>`;
 
+    const all = g.diag ? [...g.edges, g.diag] : g.edges;
     let out = `<polygon class="poly" points="${P.map(p => p.join(',')).join(' ')}"/>`;
-    if (g.diag) {
-      const [i, j] = g.diag;
-      out += `<line class="diag" x1="${P[i][0]}" y1="${P[i][1]}" x2="${P[j][0]}" y2="${P[j][1]}"/>`;
-    }
+    if (g.diag) out += line('diag', g.diag);
+    out += g.edges.map(e => line('edge', e)).join('');
     out += P.map(([x, y]) => `<circle class="vtx" cx="${x}" cy="${y}" r="4.5"/>`).join('');
-    for (const [i, j, label] of g.edges) {
+    out += all.map(e => line('hit', e)).join('');
+    for (const [i, j, label, k] of g.edges) {
       const mx = (P[i][0] + P[j][0]) / 2, my = (P[i][1] + P[j][1]) / 2;
       const dx = mx - cx, dy = my - cy, len = Math.hypot(dx, dy) || 1;
-      out += badge(mx + dx / len * 17, my + dy / len * 17, label);
+      out += badge(mx + dx / len * 17, my + dy / len * 17, label, k);
     }
     if (g.diag) {
-      const [i, j, label] = g.diag;
-      out += badge((P[i][0] + P[j][0]) / 2, (P[i][1] + P[j][1]) / 2, label, 'd');
+      const [i, j, label, k] = g.diag;
+      out += badge((P[i][0] + P[j][0]) / 2, (P[i][1] + P[j][1]) / 2, label, k, 'd');
     }
     svg.innerHTML = out;
     svg.classList.toggle('ghost', !real);
+    setActive(state.active);
+  }
+
+  // lights up one side in the picture and its measurement box
+  function setActive(k) {
+    state.active = k;
+    $$('[data-k]', svg).forEach(el => el.classList.toggle('on', el.dataset.k === k));
+    $$('.field-row', fieldsEl).forEach(r => r.classList.toggle('on', r.dataset.k === k));
+  }
+
+  // value of one side in the chosen unit
+  function sideValue(k) {
+    const val = state.vals[state.shape][k];
+    if (!val) return NaN;
+    if (state.unit === 'ft') return ftInToInches(parseNum(val.main), parseNum(val.inch)) / 12;
+    return parseNum(val.main);
   }
 
   function compute() {
@@ -350,7 +435,7 @@ function initPlot() {
     const v = {};
     let complete = true;
     for (const [k] of SHAPES[shape].fields) {
-      v[k] = parseNum(state.vals[shape][k]);
+      v[k] = sideValue(k);
       if (!(v[k] > 0)) complete = false;
     }
     const area = complete ? plotArea(shape, v) : NaN;
@@ -366,16 +451,28 @@ function initPlot() {
     for (const [k, label, num] of SHAPES[state.shape].fields) {
       const row = document.createElement('label');
       row.className = 'field-row';
+      row.dataset.k = k;
       const isDiag = k === 'e';
       row.innerHTML = `<span class="badge${isDiag ? ' d' : ''}">${num}</span>` +
         `<span class="field-name">${label}${isDiag ? '<small>మూల నుండి ఎదురు మూలకు</small>' : ''}</span>`;
-      const inp = numInput();
-      inp.value = state.vals[state.shape][k] || '';
-      inp.addEventListener('input', () => { state.vals[state.shape][k] = cleanNumInput(inp); compute(); });
-      const tag = document.createElement('span');
-      tag.className = 'unit-tag';
-      tag.textContent = LEN_SHORT[state.unit];
-      row.append(inp, tag);
+      const val = state.vals[state.shape][k] ||= { main: '', inch: '' };
+      const bind = (inp, key) => {
+        inp.value = val[key];
+        inp.addEventListener('input', () => { val[key] = cleanNumInput(inp); compute(); });
+      };
+      if (state.unit === 'ft') {
+        const p = ftInPair();
+        bind(p.ft, 'main');
+        bind(p.inch, 'inch');
+        row.append(p.wrap);
+      } else {
+        const inp = numInput();
+        bind(inp, 'main');
+        const tag = document.createElement('span');
+        tag.className = 'unit-tag';
+        tag.textContent = LEN_SHORT[state.unit];
+        row.append(inp, tag);
+      }
       fieldsEl.append(row);
     }
     $('#shape-hint').innerHTML = SHAPES[state.shape].hint;
@@ -385,6 +482,13 @@ function initPlot() {
   segmented($('#shape-picker'), v => { state.shape = v; renderFields(); });
   segmented($('#plot-unit'), v => { state.unit = v; renderFields(); });
   $('#plot-clear').addEventListener('click', () => { state.vals[state.shape] = {}; renderFields(); });
+
+  svg.addEventListener('click', e => {
+    const t = e.target.closest('[data-k]');
+    if (t) $(`.field-row[data-k="${t.dataset.k}"] input`, fieldsEl).focus();
+  });
+  fieldsEl.addEventListener('focusin', e => setActive(e.target.closest('.field-row').dataset.k));
+  fieldsEl.addEventListener('focusout', e => { if (!fieldsEl.contains(e.relatedTarget)) setActive(null); });
 
   // photo is only shown on screen for reference; it never leaves the phone
   const photoInput = $('#photo-input'), photoBtn = $('#photo-btn'), preview = $('#photo-preview');
@@ -493,7 +597,7 @@ function initCalc() {
 // ---------- interest ----------
 
 function initInterest() {
-  const s = { mode: 'rupee', time: 'dur', compound: false, perYear: 1 };
+  const s = { kind: 'interest', mode: 'rupee', time: 'dur', compound: false, perYear: 1 };
   const P = enhanceNum($('#int-p')), R = enhanceNum($('#int-r'));
   const Y = enhanceNum($('#int-y')), M = enhanceNum($('#int-m')), D = enhanceNum($('#int-d'));
   const from = $('#int-from'), to = $('#int-to');
@@ -521,6 +625,17 @@ function initInterest() {
     else hint.innerHTML = s.mode === 'rupee'
       ? `= ఏడాదికి <b>${fmt(annual)}%</b>`
       : `= నెలకు ₹100 కి <b>₹${fmt(r / 12)}</b> వడ్డీ`;
+
+    if (s.kind === 'emi') {
+      const n = Math.round((parseNum(Y.value) || 0) * 12 + (parseNum(M.value) || 0));
+      const ok = p > 0 && r >= 0 && n > 0;
+      const emi = ok ? emiFor(p, annual, n) : NaN;
+      $('#emi-amount').textContent = ok ? fmtRs(emi) : '—';
+      $('#emi-interest').textContent = ok ? fmtRs(emi * n - p) : '—';
+      $('#emi-total').textContent = ok ? fmtRs(emi * n) : '—';
+      $('#emi-count').textContent = n > 0 ? `${n} నెలలు` : '—';
+      return;
+    }
 
     let ymd;
     if (s.time === 'dur') {
@@ -554,12 +669,22 @@ function initInterest() {
     $('#int-r-suffix').textContent = v === 'rupee' ? '₹100 కి, నెలకు' : '% ఏడాదికి';
     compute();
   });
-  segmented($('#int-time'), v => {
-    s.time = v;
-    $('#int-dur').hidden = v !== 'dur';
-    $('#int-dates').hidden = v !== 'dates';
+  // EMI always uses years + months, so the date and interest-type choices step aside
+  function layout() {
+    const emi = s.kind === 'emi';
+    $('#int-p-label').textContent = emi ? 'అప్పు మొత్తం (లోన్)' : 'అసలు (ఇచ్చిన / తీసుకున్న డబ్బు)';
+    $('#int-time-label').textContent = emi ? 'ఎంత కాలంలో తీర్చాలి?' : 'ఎంత కాలం?';
+    $('#int-time').hidden = emi;
+    $('#int-d-wrap').hidden = emi;
+    $('#int-dur').hidden = !emi && s.time !== 'dur';
+    $('#int-dates').hidden = emi || s.time !== 'dates';
+    $('#int-type-card').hidden = emi;
+    $('#int-result').hidden = emi;
+    $('#emi-result').hidden = !emi;
     compute();
-  });
+  }
+  segmented($('#int-kind'), v => { s.kind = v; layout(); });
+  segmented($('#int-time'), v => { s.time = v; layout(); });
   segmented($('#int-type'), v => {
     s.compound = v === 'compound';
     $('#int-freq-wrap').hidden = !s.compound;
