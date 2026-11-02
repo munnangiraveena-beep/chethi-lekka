@@ -94,6 +94,13 @@ function heron(a, b, c) {
   return q > 0 ? Math.sqrt(q) : NaN;
 }
 
+// diagonal A–C when the four corners sit on one circle (Brahmagupta's quadrilateral):
+// the most area these sides can hold, exact for rectangles and close for most real plots
+function cyclicDiagonal(a, b, c, d) {
+  const sq = a * a + b * b - a * b * (a * a + b * b - c * c - d * d) / (a * b + c * d);
+  return sq > 0 ? Math.sqrt(sq) : NaN;
+}
+
 // area in (input unit)², NaN if the measurements can't form the shape
 function plotArea(shape, v) {
   if (shape === 'rect') return v.l * v.w;
@@ -543,7 +550,7 @@ const SHAPES = {
   },
   quad: {
     fields: [['a', 'వైపు 1', '1'], ['b', 'వైపు 2', '2'], ['c', 'వైపు 3', '3'], ['d', 'వైపు 4', '4'], ['e', 'కర్ణం', 'క']],
-    hint: 'బొమ్మలో ఉన్నట్లు 1, 2, 3, 4 వైపులు వరుసగా కొలవండి. ఒక మూల నుండి ఎదురు మూలకు (<b>కర్ణం</b>) కూడా కొలవండి — అది లేకుండా సరైన విస్తీర్ణం రాదు.',
+    hint: 'బొమ్మలో ఉన్నట్లు 1, 2, 3, 4 వైపులు వరుసగా కొలవండి. ఒక మూల నుండి ఎదురు మూలకు (<b>కర్ణం</b>) కూడా కొలిస్తే విస్తీర్ణం సరిగ్గా వస్తుంది; లేకపోతే దాదాపు లెక్క చూపిస్తాం.',
     sample: { a: 40, b: 32, c: 44, d: 30, e: 52 },
   },
   tri: {
@@ -669,20 +676,26 @@ function initPlot() {
     let complete = true;
     for (const [k] of SHAPES[shape].fields) {
       v[k] = sideValue(k);
-      if (!(v[k] > 0)) complete = false;
+      // the diagonal is optional; without it the area is an estimate
+      if (!(v[k] > 0) && k !== 'e') complete = false;
     }
+    const estimated = complete && shape === 'quad' && !(v.e > 0);
+    if (estimated) v.e = cyclicDiagonal(v.a, v.b, v.c, v.d);
     const area = complete ? plotArea(shape, v) : NaN;
     const ok = complete && area > 0;
     errEl.hidden = !complete || ok;
+    $('#plot-note').hidden = !(ok && estimated);
+    svg.classList.toggle('est', estimated);
     const sqft = area * LEN_TO_FT[unit] ** 2;
+    const about = estimated ? '≈ ' : '';
     const labels = Object.fromEntries(SHAPES[shape].fields.map(([k, name]) => {
       const typed = sideLabel(k);
       return [k, { text: typed || name, typed: !!typed }];
     }));
-    draw(shape, v, ok, labels, ok && [`${fmt(sqft / 435.6)} సెంట్లు`, `${fmt(sqft / 9)} గజాలు`]);
+    draw(shape, v, ok, labels, ok && [`${about}${fmt(sqft / 435.6)} సెంట్లు`, `${fmt(sqft / 9)} గజాలు`]);
     plotPic(ok ? sqft : NaN);
     $('#plot-result').classList.toggle('empty', !ok);
-    AREA_UNITS.forEach((u, i) => setText(resultCells[i], ok ? fmt(sqft / u.f) : '—'));
+    AREA_UNITS.forEach((u, i) => setText(resultCells[i], ok ? about + fmt(sqft / u.f) : '—'));
   }
 
   function renderFields() {
@@ -693,7 +706,7 @@ function initPlot() {
       row.dataset.k = k;
       const isDiag = k === 'e';
       row.innerHTML = `<span class="badge${isDiag ? ' d' : ''}">${num}</span>` +
-        `<span class="field-name">${label}${isDiag ? '<small>మూల నుండి ఎదురు మూలకు</small>' : ''}</span>`;
+        `<span class="field-name">${label}${isDiag ? '<small>మూల నుండి ఎదురు మూలకు · లేకపోయినా సరే</small>' : ''}</span>`;
       const val = state.vals[state.shape][k] ||= { main: '', inch: '' };
       const bind = (inp, key) => {
         inp.value = val[key];

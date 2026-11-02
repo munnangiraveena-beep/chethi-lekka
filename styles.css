@@ -500,6 +500,8 @@ html.big .seg button { min-width: 0; padding: 8px 2px; font-size: 13px; }
 .ghost .len { fill: var(--muted); }
 .area-line { margin: 0 8px 4px; font-size: 17px; text-align: center; }
 .area-line:empty { display: none; }
+.est .diag { opacity: .45; }
+.result-note { margin: 8px 0 4px; padding: 8px 12px; border-radius: 10px; background: rgb(255 255 255 / .14); font-size: 15px; line-height: 1.5; }
 .area-line b { color: var(--brand); font-size: 20px; }
 
 .pic {
